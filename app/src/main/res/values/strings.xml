@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">rover</string>
+    <string name="startSearch">поиск устройства</string>
+</resources>
