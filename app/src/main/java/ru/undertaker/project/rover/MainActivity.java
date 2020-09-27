@@ -18,9 +18,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.UUID;
+
+import io.github.controlwear.virtual.joystick.android.JoystickView;
 
 public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter bluetoothAdapter;
@@ -28,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> pairedDeviceArrayList;
     private ArrayAdapter<String> pairedDeviceAdapter;
     public static BluetoothSocket clientSocket;
+    private OutputStream outStrem;
+    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,20 +110,43 @@ public class MainActivity extends AppCompatActivity {
                 //получаем класс с информацией об устройстве
                 BluetoothDevice connectDevice = bluetoothAdapter.getRemoteDevice(itemMAC);
                 try {
-                    //генерируем socket - поток, через который будут посылаться данные
-                    Method m = connectDevice.getClass().getMethod(
-                            "createRfcommSocket", new Class[]{int.class});
-
-                    clientSocket = (BluetoothSocket) m.invoke(connectDevice, 1);
+                    clientSocket = connectDevice.createInsecureRfcommSocketToServiceRecord(MY_UUID);
                     clientSocket.connect();
+                    outStrem = clientSocket.getOutputStream();
+
                     if(clientSocket.isConnected()) {
                         //если соединение установлено, завершаем поиск
                         bluetoothAdapter.cancelDiscovery();
+                        listView.setVisibility(View.INVISIBLE);
                     }
+
                 } catch(Exception e) {
                     e.getStackTrace();
                 }
             }
         });
+
+
+        JoystickView joystick = (JoystickView) findViewById(R.id.joystickView_right);
+        joystick.setOnMoveListener(new JoystickView.OnMoveListener() {
+            @Override
+            public void onMove(int angle, int strength) {
+                sendData("$" + angle + " " + strength + ";");// do whatever you want
+            }
+        });
+    }
+    public void sendData(String message) {
+        byte[] msgBuffer = message.getBytes();
+
+
+        try {
+            outStrem.write(msgBuffer);
+        } catch (IOException e) {}
+    }
+
+    public void cancel(){
+        try {
+            outStrem.close();
+        }catch(IOException e){}
     }
 }
