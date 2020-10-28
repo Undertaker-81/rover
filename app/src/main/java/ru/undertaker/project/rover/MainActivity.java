@@ -41,6 +41,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
+        connectBt();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        connectBt();
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        connectBt();
+    }
+
+    protected void connectBt(){
         //цепляем кнопку поиска БТ
         Button buttonStartFind =  findViewById(R.id.buttonStartSearch);
         //цепляем layout, в котором будут отображаться найденные устройства
@@ -60,8 +76,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
     }
+
     private boolean permissionGranted() {
         //если оба разрешения получены, вернуть true
         if (ContextCompat.checkSelfPermission(getApplicationContext(),
